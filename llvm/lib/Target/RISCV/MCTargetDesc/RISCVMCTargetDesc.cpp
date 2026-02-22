@@ -13,6 +13,7 @@
 #include "RISCVMCTargetDesc.h"
 #include "RISCVELFStreamer.h"
 #include "RISCVInstPrinter.h"
+#include "MyRISCVInstPrinter.h"
 #include "RISCVMCAsmInfo.h"
 #include "RISCVMCObjectFileInfo.h"
 #include "RISCVTargetStreamer.h"
@@ -172,7 +173,7 @@ static MCInstPrinter *createRISCVMCInstPrinter(const Triple &T,
                                                const MCAsmInfo &MAI,
                                                const MCInstrInfo &MII,
                                                const MCRegisterInfo &MRI) {
-  return new RISCVInstPrinter(MAI, MII, MRI);
+  return new MyRISCVInstPrinter(MAI, MII, MRI);
 }
 
 static MCTargetStreamer *
