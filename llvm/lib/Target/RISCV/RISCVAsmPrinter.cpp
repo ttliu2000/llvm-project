@@ -18,6 +18,7 @@
 #include "MCTargetDesc/RISCVMatInt.h"
 #include "MCTargetDesc/RISCVTargetStreamer.h"
 #include "RISCV.h"
+#include "RISCVAsmPrinter.h"
 #include "RISCVConstantPoolValue.h"
 #include "RISCVMachineFunctionInfo.h"
 #include "RISCVRegisterInfo.h"
@@ -25,7 +26,6 @@
 #include "llvm/ADT/APInt.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/BinaryFormat/ELF.h"
-#include "llvm/CodeGen/AsmPrinter.h"
 #include "llvm/CodeGen/MachineConstantPool.h"
 #include "llvm/CodeGen/MachineInstr.h"
 #include "llvm/CodeGen/MachineModuleInfo.h"
@@ -55,80 +55,12 @@ namespace llvm {
 extern const SubtargetFeatureKV RISCVFeatureKV[RISCV::NumSubtargetFeatures];
 } // namespace llvm
 
-namespace {
-class RISCVAsmPrinter : public AsmPrinter {
-public:
-  static char ID;
+RISCVAsmPrinter::RISCVAsmPrinter(TargetMachine &TM,
+                                 std::unique_ptr<MCStreamer> Streamer)
+    : AsmPrinter(TM, std::move(Streamer), ID) {}
 
-private:
-  const RISCVSubtarget *STI;
-
-public:
-  explicit RISCVAsmPrinter(TargetMachine &TM,
-                           std::unique_ptr<MCStreamer> Streamer)
-      : AsmPrinter(TM, std::move(Streamer), ID) {}
-
-  StringRef getPassName() const override { return "RISC-V Assembly Printer"; }
-
-  void LowerSTACKMAP(MCStreamer &OutStreamer, StackMaps &SM,
-                     const MachineInstr &MI);
-
-  void LowerPATCHPOINT(MCStreamer &OutStreamer, StackMaps &SM,
-                       const MachineInstr &MI);
-
-  void LowerSTATEPOINT(MCStreamer &OutStreamer, StackMaps &SM,
-                       const MachineInstr &MI);
-
-  bool runOnMachineFunction(MachineFunction &MF) override;
-
-  void emitInstruction(const MachineInstr *MI) override;
-
-  void emitMachineConstantPoolValue(MachineConstantPoolValue *MCPV) override;
-
-  bool PrintAsmOperand(const MachineInstr *MI, unsigned OpNo,
-                       const char *ExtraCode, raw_ostream &OS) override;
-  bool PrintAsmMemoryOperand(const MachineInstr *MI, unsigned OpNo,
-                             const char *ExtraCode, raw_ostream &OS) override;
-
-  // Returns whether Inst is compressed.
-  bool EmitToStreamer(MCStreamer &S, const MCInst &Inst,
-                      const MCSubtargetInfo &SubtargetInfo);
-  bool EmitToStreamer(MCStreamer &S, const MCInst &Inst) {
-    return EmitToStreamer(S, Inst, *STI);
-  }
-
-  bool lowerPseudoInstExpansion(const MachineInstr *MI, MCInst &Inst);
-
-  typedef std::tuple<unsigned, uint32_t> HwasanMemaccessTuple;
-  std::map<HwasanMemaccessTuple, MCSymbol *> HwasanMemaccessSymbols;
-  void LowerHWASAN_CHECK_MEMACCESS(const MachineInstr &MI);
-  void LowerKCFI_CHECK(const MachineInstr &MI);
-  void EmitHwasanMemaccessSymbols(Module &M);
-
-  // Wrapper needed for tblgenned pseudo lowering.
-  bool lowerOperand(const MachineOperand &MO, MCOperand &MCOp) const;
-
-  void emitStartOfAsmFile(Module &M) override;
-  void emitEndOfAsmFile(Module &M) override;
-
-  void emitFunctionEntryLabel() override;
-  bool emitDirectiveOptionArch();
-
-  void emitNoteGnuProperty(const Module &M);
-
-private:
-  void emitAttributes(const MCSubtargetInfo &SubtargetInfo);
-
-  void emitNTLHint(const MachineInstr *MI);
-
-  // XRay Support
-  void LowerPATCHABLE_FUNCTION_ENTER(const MachineInstr *MI);
-  void LowerPATCHABLE_FUNCTION_EXIT(const MachineInstr *MI);
-  void LowerPATCHABLE_TAIL_CALL(const MachineInstr *MI);
-  void emitSled(const MachineInstr *MI, SledKind Kind);
-
-  void lowerToMCInst(const MachineInstr *MI, MCInst &OutMI);
-};
+StringRef RISCVAsmPrinter::getPassName() const {
+  return "RISC-V Assembly Printer";
 }
 
 void RISCVAsmPrinter::LowerSTACKMAP(MCStreamer &OutStreamer, StackMaps &SM,
@@ -267,6 +199,10 @@ bool RISCVAsmPrinter::EmitToStreamer(MCStreamer &S, const MCInst &Inst,
     ++RISCVNumInstrsCompressed;
   S.emitInstruction(Res ? CInst : Inst, SubtargetInfo);
   return Res;
+}
+
+bool RISCVAsmPrinter::EmitToStreamer(MCStreamer &S, const MCInst &Inst) {
+  return EmitToStreamer(S, Inst, *STI);
 }
 
 // Simple pseudo-instructions have their lowering (with expansion to real
