@@ -19,6 +19,7 @@
 #include "MCTargetDesc/RISCVTargetStreamer.h"
 #include "RISCV.h"
 #include "RISCVAsmPrinter.h"
+#include "MyRISCVAsmPrinter.h"
 #include "RISCVConstantPoolValue.h"
 #include "RISCVMachineFunctionInfo.h"
 #include "RISCVRegisterInfo.h"
@@ -553,10 +554,10 @@ void RISCVAsmPrinter::emitFunctionEntryLabel() {
 // Force static initialization.
 extern "C" LLVM_ABI LLVM_EXTERNAL_VISIBILITY void
 LLVMInitializeRISCVAsmPrinter() {
-  RegisterAsmPrinter<RISCVAsmPrinter> X(getTheRISCV32Target());
-  RegisterAsmPrinter<RISCVAsmPrinter> Y(getTheRISCV64Target());
-  RegisterAsmPrinter<RISCVAsmPrinter> A(getTheRISCV32beTarget());
-  RegisterAsmPrinter<RISCVAsmPrinter> B(getTheRISCV64beTarget());
+  RegisterAsmPrinter<MyRISCVAsmPrinter> X(getTheRISCV32Target());
+  RegisterAsmPrinter<MyRISCVAsmPrinter> Y(getTheRISCV64Target());
+  RegisterAsmPrinter<MyRISCVAsmPrinter> A(getTheRISCV32beTarget());
+  RegisterAsmPrinter<MyRISCVAsmPrinter> B(getTheRISCV64beTarget());
 }
 
 void RISCVAsmPrinter::LowerHWASAN_CHECK_MEMACCESS(const MachineInstr &MI) {
