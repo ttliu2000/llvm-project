@@ -15,6 +15,9 @@ namespace llvm {
 
         void emitFunctionBodyStart() override;
         void emitFunctionBodyEnd() override;
+
+        void emitGlobalVariable(const GlobalVariable *GV) override;
+        void emitInstruction(const MachineInstr *MI) override;
     };
 
 }
