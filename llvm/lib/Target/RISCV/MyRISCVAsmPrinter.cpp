@@ -1,6 +1,7 @@
 #include "MyRISCVAsmPrinter.h"
 #include "llvm/MC/MCStreamer.h"
 #include "llvm/MC/MCContext.h"
+#include "llvm/MC/MCSymbol.h"
 
 using namespace llvm;
 
@@ -25,4 +26,22 @@ void MyRISCVAsmPrinter::emitEndOfAsmFile(Module &M) {
   OutStreamer->emitLabel(DataLabel);
 
   RISCVAsmPrinter::emitEndOfAsmFile(M);
+}
+
+void MyRISCVAsmPrinter::emitFunctionBodyStart() {
+  // Emit custom label at the start of each function body
+  MCSymbol *FuncLabel =
+      OutContext.getOrCreateSymbol("__start_of_function_" + CurrentFnSym->getName());
+  OutStreamer->emitLabel(FuncLabel);
+
+  RISCVAsmPrinter::emitFunctionBodyStart();
+}
+
+void MyRISCVAsmPrinter::emitFunctionBodyEnd() {
+  // Emit custom label at the end of each function body
+  MCSymbol *FuncEndLabel =
+      OutContext.getOrCreateSymbol("__end_of_function_" + CurrentFnSym->getName());
+  OutStreamer->emitLabel(FuncEndLabel);
+
+  RISCVAsmPrinter::emitFunctionBodyEnd();
 }

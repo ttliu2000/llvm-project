@@ -6,12 +6,15 @@
 
 namespace llvm {
 
-class MyRISCVAsmPrinter : public RISCVAsmPrinter {
-public:
-    MyRISCVAsmPrinter(TargetMachine &TM, std::unique_ptr<MCStreamer> Streamer);
+    class MyRISCVAsmPrinter : public RISCVAsmPrinter {
+    public:
+        MyRISCVAsmPrinter(TargetMachine &TM, std::unique_ptr<MCStreamer> Streamer);
 
-    void emitStartOfAsmFile(Module &M) override;
-    void emitEndOfAsmFile(Module &M) override;
-};
+        void emitStartOfAsmFile(Module &M) override;
+        void emitEndOfAsmFile(Module &M) override;
+
+        void emitFunctionBodyStart() override;
+        void emitFunctionBodyEnd() override;
+    };
 
 }
